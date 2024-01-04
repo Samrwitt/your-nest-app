@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flippable Login/Register Page</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+        }
+
+        .flip-container {
+            perspective: 1000px;
+            width: 400px;
+            height: 300px;
+        }
+
+        .flip-container.flip .flipper {
+            transform: rotateY(180deg);
+        }
+
+        .flipper {
+            transition: 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+
+        .front, .back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+        }
+
+        .front {
+            background-color: #3498db;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        .back {
+            background-color: #2ecc71;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            transform: rotateY(180deg);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        input {
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #fff;
+            color: #3498db;
+            border: 1px solid #3498db;
+            cursor: pointer;
+        }
+
+        .flip-link {
+            text-align: center;
+            margin-top: 10px;
+            cursor: pointer;
+            color: #3498db;
+            text-decoration: underline;
+        }
+
+        .password-requirements {
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="flip-container">
+    <div class="flipper">
+        <!-- Front side (Login) -->
+        <div class="front">
+            <h2>Login</h2>
+            <div class="form-group">
+                <input type="text" placeholder="Username">
+            </div>
+            <div class="form-group">
+                <input type="password" placeholder="Password">
+            </div>
+            <button>Login</button>
+            <div class="flip-link" onclick="flipContainer()">Switch to Register</div>
+        </div>
+
+        <!-- Back side (Register) -->
+        <div class="back">
+            <h2>Register</h2>
+            <div class="form-group">
+                <input type="text" placeholder="Username">
+            </div>
+            <div class="form-group">
+                <input type="password" id="registerPassword" placeholder="Password">
+                <div class="password-requirements">Password must be at least 12 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.</div>
+                <div id="passwordError" class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <input type="password" placeholder="Confirm Password">
+            </div>
+            <button onclick="validatePassword()">Register</button>
+            <div class="flip-link" onclick="flipContainer()">Switch to Login</div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
