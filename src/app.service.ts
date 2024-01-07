@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import {InjectRepository} from '@nestjs/typeOrm';
-import {User} from "./user.entity";
-import{Repository} from "typeorm";
-
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeOrm';
+import { User } from "./user.entity";
+import { Repository, FindOneOptions } from "typeorm";
 
 @Injectable()
 export class AppService {
@@ -14,8 +13,15 @@ export class AppService {
     return this.userRepository.save(data);
   }
 
+  async findOne(email: string): Promise<User | undefined> {
+    console.log('Looking for user with email:', email);
 
-async findOne(condition:any): Promise<User> {
-  return this.userRepository.findOne(condition);
-}
+    if (!email) {
+      console.error('Invalid email provided to findOne method.');
+      return undefined;
+    }
+
+    const options: FindOneOptions<User> = { where: { email } };
+    return this.userRepository.findOne(options);
+  }
 }

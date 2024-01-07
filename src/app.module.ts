@@ -8,17 +8,15 @@ import { JwtModule } from '@nestjs/jwt';
 @Module({
   imports: [ 
     TypeOrmModule.forRoot({
-      type:'mssql',
+      type:'mysql',
       host:'localhost',
-      port:1433,
-      database: "master",
+      port:3306,
+      database: "digitalnotebook",
       entities: [User],
-      synchronize: true,
+      synchronize: false ,
       logging: true,
-      extra: {
-        integratedSecurity: true,
-        trustServerCertificate: true, 
-      },
+     username: "root",
+    password:"123321"
     }),
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
