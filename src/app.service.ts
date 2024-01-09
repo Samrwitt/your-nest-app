@@ -8,9 +8,9 @@ export class AppService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
-
-  async create(data: any): Promise<User> {
-    return this.userRepository.save(data);
+  async create(data: any, isAdmin: boolean = false): Promise<User> {
+    data.role = isAdmin ? 'admin' : 'user';
+      return this.userRepository.save(data);
   }
 
   async findOne(email: string): Promise<User | undefined> {
