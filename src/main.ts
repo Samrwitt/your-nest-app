@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './auth.module';
 import * as cookieParser from 'cookie-parser';
 import {JwtMiddleware} from './jwt.middleware';
 
@@ -9,7 +9,7 @@ async function bootstrap() {
   app.use(new JwtMiddleware().use);
   app.enableCors({origin:'https://localhost:8080',
   credentials:true});
-  await app.listen(8000);
+  await app.listen(8001);
 }
 bootstrap();
 

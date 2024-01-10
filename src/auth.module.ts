@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AppController } from './auth.controller';
+import { AppService } from './auth.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './user.entity';
-import { Note } from './note.entity';
+import { User } from './users/entities/user.entity';
+import { Note } from './note/entities/note.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from './users/users.module';
 import { RolesGuard } from './users/roles.guard'; // Adjust the path accordingly
 import { NoteModule } from './note/note.module';
+import { truncate } from 'fs/promises';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [ 
@@ -15,7 +17,7 @@ import { NoteModule } from './note/note.module';
       type: 'mysql',
       host: 'localhost',
       port: 3306,
-      database: 'digitalnotebook',
+      database: 'echo',
       entities: [User, Note],
       synchronize: false,
       logging: true,
@@ -29,6 +31,7 @@ import { NoteModule } from './note/note.module';
     }),
     UsersModule,
     NoteModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,6 +1,6 @@
 // note/entities/note.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { User } from '../../user.entity'; 
+import { User } from '../../users/entities/user.entity'; 
 
 @Entity()
 export class Note {

@@ -1,69 +1,72 @@
-// notes.controller.ts
+// note.controller.ts
 
-import { Controller, Get, Post,  Body, Param, Patch, Delete, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Controller, Get,  Post, Put, Delete, Param, Body, UseGuards, ForbiddenException, NotFoundException, Patch, Query } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { NoteService } from './note.service';
+import { Note } from './entities/note.entity';
+import { User } from '../users/entities/user.entity';
 import { CreateNoteDto } from './dto/create-note.dto';
-import { User } from '../user.entity';
-import { CurrentUser } from '../users/current-user.decorator';
-import { Roles } from '../users/roles.decorator';
-import { RolesGuard } from '../users/roles.guard';
-import { Role } from '../users/entities/role.enum';
+import { UpdateNoteDto } from './dto/update-note.dto';
+import {Role} from "../users/entities/role.enum"
+import { CurrentUser } from 'src/users/current-user.decorator';
+import { Roles } from 'src/users/roles.decorator';
 
-@UseGuards(RolesGuard)
 @Controller('notes')
+@UseGuards(AuthGuard()) // Example: Use guards as needed
 export class NotesController {
-  constructor(private readonly notesService: NoteService) {}
+  constructor(private readonly noteService: NoteService) {}
 
   @Post()
   @Roles(Role.User, Role.Admin)
   create(@CurrentUser() currentUser: User, @Body() createNoteDto: CreateNoteDto) {
-    return this.notesService.create(
-      currentUser,
-      createNoteDto.title,    // Pass title as an argument
-      createNoteDto.content,  // Pass content as an argument
-    );
+    const newNote = this.noteService.create(currentUser, createNoteDto);
+    return { user: newNote, message: 'Note created successfully' };
   }
-
+  
   @Get()
   @Roles(Role.User, Role.Admin)
   findAll(@CurrentUser() currentUser: User) {
-    return this.notesService.findAll(currentUser);
+    return this.noteService.findAll(currentUser);
   }
 
   @Get(':id')
   @Roles(Role.User, Role.Admin)
   findOne(@CurrentUser() currentUser: User, @Param('id') id: string) {
     const noteId = +id;
-    return this.notesService.findOne(currentUser, noteId);
+    return this.noteService.findOne(currentUser, noteId);
+  }
+
+  @Get('by-title')
+  @Roles(Role.User, Role.Admin)
+  findOneByTitle(@CurrentUser() currentUser: User, @Query('title') title: string) {
+    return this.noteService.findOneByTitle(currentUser, title);
   }
   
   @Patch(':id')
   @Roles(Role.User, Role.Admin)
-  async update(
-    @CurrentUser() currentUser: User,
-    @Param('id') id: string,
-    @Body() updateNoteDto: CreateNoteDto,
-  ) {
-    return await this.notesService.update(
-      currentUser,
-      +id,
-      updateNoteDto.title,  // Pass title as an argument
-      updateNoteDto.content, // Pass content as an argument
-    );
+  update(@Param('id') id: string, @Body() updateNoteDto: UpdateNoteDto, @CurrentUser() currentUser: User) {
+    try {
+      const updatedNote = this.noteService.update(currentUser, +id, updateNoteDto.title, updateNoteDto.content);
+      return { user: updatedNote, message: 'Note updated successfully' };
+    } catch (error) {
+      if (error instanceof ForbiddenException) {
+        throw new ForbiddenException('You do not have permission to update this note.');
+      } else {
+        throw new NotFoundException('Note not found');
+      }
+    }
   }
-  
 
   @Delete(':id')
   @Roles(Role.User, Role.Admin)
-  remove(@CurrentUser() currentUser: User, @Param('id') id: string) {
+  async remove(@Param('id') id: string, @CurrentUser() currentUser: User) {
     const noteId = +id;
-
-    // Users can only delete their own notes
-    if (currentUser.role === Role.User) {
+  
+    if (currentUser.role === Role.User && currentUser.id !== noteId) {
       throw new ForbiddenException('You can only delete your own notes.');
     }
-
-    return this.notesService.remove(currentUser, noteId);
+  
+    await this.noteService.remove(currentUser, noteId);
+    return { message: 'Note deleted successfully' };
   }
 }
- 
