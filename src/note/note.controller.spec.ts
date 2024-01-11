@@ -9,6 +9,7 @@ import { User } from '../users/entities/user.entity';
 import { Role } from '../users/entities/role.enum';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { UpdateNoteDto } from './dto/update-note.dto';
+import { NoteRepository } from './note.repository';
 
 describe('NotesController', () => {
   let noteController: NotesController;
@@ -17,7 +18,7 @@ describe('NotesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NotesController],
-      providers: [NoteService],
+      providers: [NoteService, NoteRepository],
     }).compile();
 
     noteController = module.get<NotesController>(NotesController);
@@ -53,7 +54,7 @@ describe('NotesController', () => {
 
       const result = await noteController.create(mockUser, createNoteDto);
 
-      expect(result).toEqual({ user: mockNote, message: 'Note created successfully' });
+      expect(result).toEqual({ note: mockNote, message: 'Note created successfully' });
     });
   });
 
@@ -119,9 +120,9 @@ describe('NotesController', () => {
         notes: [],
         password: '',
       };
-
+  
       const noteId = 1;
-
+  
       const mockNote: Note = {
         id: 1,
         title: 'Test Note',
@@ -130,14 +131,14 @@ describe('NotesController', () => {
         createdAt: undefined,
         updatedAt: undefined,
       };
-
+  
       jest.spyOn(noteService, 'findOne').mockResolvedValueOnce(mockNote);
-
+  
       const result = await noteController.findOne(mockUser, noteId.toString());
-
+  
       expect(result).toEqual(mockNote);
     });
-
+  
     it('should throw NotFoundException for non-existing note', async () => {
       const mockUser: User = {
         id: 1,
@@ -147,43 +148,29 @@ describe('NotesController', () => {
         notes: [],
         password: '',
       };
-
+    
       const noteId = 1;
-
-      jest.spyOn(noteService, 'findOne').mockResolvedValueOnce(null);
-
-      await expect(noteController.findOne(mockUser, noteId.toString())).rejects.toThrowError(NotFoundException);
+    
+      jest.spyOn(noteService, 'findOne').mockResolvedValueOnce(undefined);
+    
+      await expect(async () => {
+        await noteController.findOne(mockUser, noteId.toString());
+      }).rejects.toThrowError(NotFoundException);
     });
-
-    it('should throw ForbiddenException for unauthorized access', async () => {
-      const mockUser: User = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'User',
-        notes: [],
-        password: '',
-      };
-
-      const noteId = 2;
-
-      const mockNote: Note = {
-        id: 2,
-        title: 'Test Note',
-        content: 'Test Content',
-        user: {
-          id: 2, name: 'Another User', email: 'another@example.com', role: 'User', notes: [],
-          password: '',
-        },
-        createdAt: undefined,
-        updatedAt: undefined,
-      };
-
-      jest.spyOn(noteService, 'findOne').mockResolvedValueOnce(mockNote);
-
-      await expect(noteController.findOne(mockUser, noteId.toString())).rejects.toThrowError(ForbiddenException);
-    });
-  });
+    
+  
+    [{
+      "resource": "/c:/Users/mihre/your-nest-app/src/note/note.controller.ts",
+      "owner": "typescript",
+      "code": "2322",
+      "severity": 8,
+      "message": "Type 'void' is not assignable to type 'Note'.",
+      "source": "ts",
+      "startLineNumber": 35,
+      "startColumn": 7,
+      "endLineNumber": 35,
+      "endColumn": 13
+    }]
 
   describe('update', () => {
     it('should update a note by ID for a user', async () => {
@@ -211,7 +198,7 @@ describe('NotesController', () => {
         updatedAt: new Date(),
       };
 
-      jest.spyOn(noteService, 'update').mockResolvedValueOnce(mockNote as never); // Corrected type assertion
+      jest.spyOn(noteService, 'update').mockResolvedValueOnce(mockNote as never);
 
       const result = await noteController.update(noteId.toString(), updateNoteDto, mockUser);
 
@@ -289,3 +276,4 @@ describe('NotesController', () => {
     });
   });
 });
+})

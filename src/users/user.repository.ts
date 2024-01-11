@@ -7,6 +7,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
+  [x: string]: any;
   async findOneByEmail(email: string): Promise<User | undefined> {
     return this.findOneByEmail( email );
   }
@@ -26,18 +27,18 @@ export class UserRepository extends Repository<User> {
   }
   async findOneById(id: number): Promise<User | undefined> {
     try {
-      const user = await this.findOneById(id );
-
+      const user = await this.UserRepository.findOne(id);
+  
       if (!user) {
         throw new NotFoundException(`User with ID '${id}' not found`);
       }
-
+  
       return user;
     } catch (error) {
       console.error('Error finding user by ID:', error);
       throw new NotFoundException('User not found');
     }
   }
-
+  
   // Add more custom repository methods if needed
 }

@@ -1,20 +1,32 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from "./users/entities/user.entity";
-import { Repository, FindOneOptions } from "typeorm";
+import { User } from './users/entities/user.entity';
+import { Repository, FindOneOptions } from 'typeorm';
 
 @Injectable()
 export class AppService {
-
   constructor(
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async create(data: any, isAdmin: boolean = false): Promise<User> {
     try {
       data.role = isAdmin ? 'admin' : 'user';
       const newUser = await this.userRepository.save(data);
-      return this.findById(newUser.id);
+  
+      // Check if user is found before returning
+      const foundUser = await this.findById(newUser.id);
+  
+      if (!foundUser) {
+        // Handle the case where the user is not found
+        console.error('User not found after creation');
+        // You can choose to return newUser or handle the case differently
+        // For example, you might want to log the issue and still return newUser
+        // return newUser;
+      }
+  
+      return foundUser || newUser;
     } catch (error) {
       console.error('Error creating user:', error);
       throw new BadRequestException('User creation failed');

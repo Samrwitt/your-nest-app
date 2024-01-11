@@ -8,6 +8,9 @@ import { UpdateNoteDto } from './dto/update-note.dto';
 
 @Injectable()
 export class NoteService {
+  findOneOrFail(id: number) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectRepository(NoteRepository)  // Inject the repository
     private readonly noteRepository: NoteRepository,

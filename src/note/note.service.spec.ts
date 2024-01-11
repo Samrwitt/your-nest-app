@@ -6,10 +6,10 @@ import { Note } from './entities/note.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
-
+import {RootTestModule } from "./root-test.module";
 const mockNoteRepository = {
   find: jest.fn(),
-  findOneById: jest.fn(),
+  findOne: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
   remove: jest.fn(),
@@ -64,8 +64,8 @@ describe('NoteService', () => {
 
       const result = await noteService.create(mockUser, createUserDto);
 
-      expect(noteRepository.create).toHaveBeenCalledWith({ title: 'Test Note', content: 'Test Content', user: mockUser });
-      expect(noteRepository.save).toHaveBeenCalledWith(mockCreatedNote);
+      expect(mockNoteRepository.create).toHaveBeenCalledWith({ title: 'Test Note', content: 'Test Content', user: mockUser });
+      expect(mockNoteRepository.save).toHaveBeenCalledWith(mockCreatedNote);
       expect(result).toEqual(mockCreatedNote);
     });
   });
@@ -99,7 +99,7 @@ describe('NoteService', () => {
         },
       ];
 
-      jest.spyOn(noteRepository, 'find').mockResolvedValueOnce(mockNotes);
+      jest.spyOn(mockNoteRepository, 'find').mockResolvedValueOnce(mockNotes);
 
       const result = await noteService.findAll(mockUser);
 
@@ -128,11 +128,11 @@ describe('NoteService', () => {
         updatedAt: undefined,
       };
 
-      jest.spyOn(mockNoteRepository, 'findOneById').mockResolvedValueOnce(mockNote);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(mockNote);
 
       const result = await noteService.findOne(mockUser, mockNoteId);
 
-      expect(mockNoteRepository.findOneById).toHaveBeenCalledWith(mockNoteId);
+      expect(mockNoteRepository.findOne).toHaveBeenCalledWith({ where: { id: mockNoteId, user: mockUser } });
       expect(result).toEqual(mockNote);
     });
 
@@ -147,7 +147,7 @@ describe('NoteService', () => {
       };
       const mockNoteId = 1;
 
-      jest.spyOn(mockNoteRepository, 'findOneById').mockResolvedValueOnce(undefined);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(undefined);
 
       await expect(noteService.findOne(mockUser, mockNoteId)).rejects.toThrowError(NotFoundException);
     });
@@ -178,7 +178,7 @@ describe('NoteService', () => {
         updatedAt: undefined,
       };
 
-      jest.spyOn(mockNoteRepository, 'findOneById').mockResolvedValueOnce(mockNote);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(mockNote);
 
       await expect(noteService.findOne(mockUser, mockNoteId)).rejects.toThrowError(ForbiddenException);
     });
@@ -204,11 +204,11 @@ describe('NoteService', () => {
         updatedAt: undefined,
       };
 
-      jest.spyOn(noteRepository, 'findOne').mockResolvedValueOnce(mockNote);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(mockNote);
 
       const result = await noteService.findOneByTitle(mockUser, mockNoteTitle);
 
-      expect(noteRepository.findOne).toHaveBeenCalledWith({ where: { user: mockUser, title: mockNoteTitle } });
+      expect(mockNoteRepository.findOne).toHaveBeenCalledWith({ where: { title: mockNoteTitle, user: mockUser } });
       expect(result).toEqual(mockNote);
     });
 
@@ -223,7 +223,7 @@ describe('NoteService', () => {
       };
       const mockNoteTitle = 'Test Note';
 
-      jest.spyOn(noteRepository, 'findOne').mockResolvedValueOnce(undefined);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(undefined);
 
       await expect(noteService.findOneByTitle(mockUser, mockNoteTitle)).rejects.toThrowError(NotFoundException);
     });
@@ -252,12 +252,12 @@ describe('NoteService', () => {
         updatedAt: undefined,
       };
 
-      jest.spyOn(mockNoteRepository, 'findOneById').mockResolvedValueOnce(mockNote);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(mockNote);
       jest.spyOn(mockNoteRepository, 'save').mockResolvedValueOnce(mockNote);
 
       const result = await noteService.update(mockUser, mockNoteId, mockTitle, mockContent);
 
-      expect(mockNoteRepository.findOneById).toHaveBeenCalledWith(mockNoteId);
+      expect(mockNoteRepository.findOne).toHaveBeenCalledWith({ where: { id: mockNoteId, user: mockUser } });
       expect(mockNoteRepository.save).toHaveBeenCalledWith({ ...mockNote, title: mockTitle, content: mockContent });
       expect(result).toEqual({ ...mockNote, title: mockTitle, content: mockContent });
     });
@@ -275,7 +275,7 @@ describe('NoteService', () => {
       const mockTitle = 'Updated Title';
       const mockContent = 'Updated Content';
 
-      jest.spyOn(mockNoteRepository, 'findOneById').mockResolvedValueOnce(undefined);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(undefined);
 
       await expect(noteService.update(mockUser, mockNoteId, mockTitle, mockContent)).rejects.toThrowError(NotFoundException);
     });
@@ -309,7 +309,7 @@ describe('NoteService', () => {
         updatedAt: undefined,
       };
 
-      jest.spyOn(mockNoteRepository, 'findOneById').mockResolvedValueOnce(mockNote);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(mockNote);
 
       await expect(noteService.update(mockUser, mockNoteId, mockTitle, mockContent)).rejects.toThrowError(ForbiddenException);
     });
@@ -317,29 +317,45 @@ describe('NoteService', () => {
 
   describe('remove', () => {
     it('should remove a note if it exists and the user has permission', async () => {
-      const mockUser: User = { id: 1, role: 'User' } as User;
+      const mockUser: User = {
+        id: 1, role: 'User', notes: [],
+        name: '',
+        email: '',
+        password: ''
+      };
       const mockNote: Note = { id: 1, user: mockUser } as Note;
 
-      (jest.spyOn(noteRepository, 'findOne') as jest.Mock).mockResolvedValueOnce(mockNote);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(mockNote);
+      jest.spyOn(mockNoteRepository, 'remove').mockResolvedValueOnce({} as any);
 
       await expect(noteService.remove(mockUser, 1)).resolves.not.toThrow();
       expect(mockNoteRepository.remove).toHaveBeenCalledWith(mockNote);
     });
 
     it('should throw ForbiddenException if user does not have permission', async () => {
-      const mockUser: User = { id: 1, role: 'User' } as User;
+      const mockUser: User = {
+        id: 1, role: 'User', notes: [],
+        name: '',
+        email: '',
+        password: ''
+      };
       const mockNote: Note = { id: 1, user: { id: 2 } as User } as Note;
 
-      (jest.spyOn(noteRepository, 'findOne') as jest.Mock).mockResolvedValueOnce(mockNote);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(mockNote);
 
       await expect(noteService.remove(mockUser, 1)).rejects.toThrowError(ForbiddenException);
       expect(mockNoteRepository.remove).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if note not found', async () => {
-      const mockUser: User = { id: 1, role: 'User' } as User;
+      const mockUser: User = {
+        id: 1, role: 'User', notes: [],
+        name: '',
+        email: '',
+        password: ''
+      };
 
-      (jest.spyOn(noteRepository, 'findOne') as jest.Mock).mockResolvedValueOnce(undefined);
+      jest.spyOn(mockNoteRepository, 'findOne').mockResolvedValueOnce(undefined);
 
       await expect(noteService.remove(mockUser, 1)).rejects.toThrowError(NotFoundException);
       expect(mockNoteRepository.remove).not.toHaveBeenCalled();

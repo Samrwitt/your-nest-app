@@ -1,12 +1,13 @@
 // note/note.module.ts
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm'; // Import TypeOrmModule
-import { NoteService } from './note.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Note } from './entities/note.entity';
+import { NoteRepository } from './note.repository';
 import { NotesController } from './note.controller';
-import { Note } from './entities/note.entity'; // Import your entity
+import { NoteService } from './note.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Note])], // Include TypeOrmModule with your entity
+  imports: [TypeOrmModule.forFeature([Note, NoteRepository])],
   controllers: [NotesController],
   providers: [NoteService],
 })
